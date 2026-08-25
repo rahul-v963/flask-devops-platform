@@ -79,3 +79,4 @@ Thumbs.db
 # Cosign private key
 # ============================================================
 cosign.key
+sbom.cdx.json

@@ -68,6 +68,17 @@ jobs:
           ignore-unfixed: true
           exit-code: 1
 
+       # Install Syft for SBOM generation
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      # Generate a CycloneDX SBOM for the Docker image
+      - name: Generate SBOM
+        run: |
+          syft flask-devops-api:${{ github.sha }} \
+            -o cyclonedx-json \
+            > sbom.cdx.json
+
       # Login to Docker Hub
       - name: Login to Docker Hub
         if: github.event_name == 'push'
