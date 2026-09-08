@@ -79,6 +79,14 @@ jobs:
             -o cyclonedx-json \
             > sbom.cdx.json
 
+      # Upload SBOM as a GitHub Actions artifact
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.cdx.json
+          retention-days: 30
+
       # Login to Docker Hub
       - name: Login to Docker Hub
         if: github.event_name == 'push'
