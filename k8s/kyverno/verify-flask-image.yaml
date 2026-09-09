@@ -1,0 +1,48 @@
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+
+metadata:
+  name: verify-flask-image
+
+spec:
+
+  failurePolicy: Fail
+
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: flask-prod
+
+  matchImageReferences:
+    - glob: "docker.io/rahulv963/flask-devops-api*"
+
+  validationConfigurations:
+    verifyDigest: true
+    mutateDigest: false
+    required: true
+
+  attestors:
+    - name: cosign
+
+      cosign:
+        key:
+          data: |-
+            -----BEGIN PUBLIC KEY-----
+            MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEVl8nYKXBlIRfFwB43OCUG1iEB4k6vWvEbbxsIQ6HwVtBrE7wPUb6m0MzvjatSTNwRPNMCdQcUFil7p5WmunouQ==
+            -----END PUBLIC KEY-----
+
+  validations:
+    - expression: >-
+        images.containers.map(image,
+        verifyImageSignatures(image, [attestors.cosign])).all(e, e > 0)
+      message: "Flask DevOps API image signature verification failed."
+
+  validationActions:
+    - Deny
+
