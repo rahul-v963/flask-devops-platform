@@ -1,0 +1,12 @@
+apiVersion: v1
+
+kind: ConfigMap
+
+metadata:
+  name: flask-devops-config
+  namespace: flask-prod
+
+data:
+  APP_ENV: "production"
+  APP_LOG_LEVEL: "info"
+

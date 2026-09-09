@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 
 APP_VERSION = "1.0.0"
@@ -11,7 +13,7 @@ def create_app():
         return {
             "application": "flask-devops-api",
             "version": APP_VERSION,
-            "environment": "production",
+            "environment": os.getenv("APP_ENV", "production"),
         }
 
     @app.get("/health")

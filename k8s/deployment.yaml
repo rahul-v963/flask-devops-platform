@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: flask-devops-api
+  namespace: flask-prod
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: flask-devops-api
+
+  template:
+    metadata:
+      labels:
+        app: flask-devops-api
+
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+
+      containers:
+        - name: flask-devops-api
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          image: rahulv963/flask-devops-api:50aacd04c83fbdebfa1ef5574d1e495effe48dd4
+
+          envFrom:
+            - configMapRef:
+                name: flask-devops-config
+
+          ports:
+            - containerPort: 8000
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
