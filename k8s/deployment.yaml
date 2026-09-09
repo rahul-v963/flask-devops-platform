@@ -40,6 +40,13 @@ spec:
             - configMapRef:
                 name: flask-devops-config
 
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flask-devops-secret
+                  key: API_KEY
+
           ports:
             - containerPort: 8000
 
