@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+
+kind: NetworkPolicy
+
+metadata:
+  name: flask-api-ingress
+  namespace: flask-prod
+
+spec:
+  podSelector:
+    matchLabels:
+      app: flask-devops-api
+
+  policyTypes:
+    - Ingress
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: controller
+
+      ports:
+        - protocol: TCP
+          port: 8000
