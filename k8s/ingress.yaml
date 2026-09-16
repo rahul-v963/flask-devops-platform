@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+
+kind: Ingress
+
+metadata:
+  name: flask-devops-ingress
+  namespace: flask-prod
+
+spec:
+  ingressClassName: nginx
+
+  tls:
+    - hosts:
+        - flask.test
+      secretName: flask-devops-tls
+
+  rules:
+    - host: flask.test
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: flask-devops-api
+                port:
+                  number: 80
