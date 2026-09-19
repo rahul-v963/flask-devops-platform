@@ -14,7 +14,7 @@ APP_VERSION = "1.0.0"
 REQUEST_COUNT = Counter(
     "flask_api_requests_total",
     "Total number of requests received by the Flask API",
-    ["endpoint"],
+    ["endpoint", "method", "status"],
 )
 
 REQUEST_LATENCY = Histogram(
@@ -29,12 +29,22 @@ def create_app():
     @app.before_request
     def track_request():
         g.request_start_time = time.perf_counter()
-        REQUEST_COUNT.labels(endpoint=request.path).inc()
+        
 
     @app.after_request
-    def track_latency(response):
+    def track_metrics(response):
         request_latency = time.perf_counter() - g.request_start_time
-        REQUEST_LATENCY.labels(endpoint=request.path).observe(request_latency)
+
+        REQUEST_COUNT.labels(
+            endpoint=request.path,
+            method=request.method,
+            status=str(response.status_code),
+        ).inc()
+
+        REQUEST_LATENCY.labels(
+            endpoint=request.path,
+        ).observe(request_latency)
+
         return response
 
     @app.get("/")

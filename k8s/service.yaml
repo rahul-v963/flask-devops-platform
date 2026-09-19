@@ -5,13 +5,16 @@ kind: Service
 metadata:
   name: flask-devops-api
   namespace: flask-prod
+  labels:
+    monitoring: prometheus
 
 spec:
   selector:
     app: flask-devops-api
 
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8000
 

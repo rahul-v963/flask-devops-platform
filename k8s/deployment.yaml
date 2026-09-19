@@ -35,7 +35,7 @@ spec:
               drop:
                 - ALL
 
-          image: rahulv963/flask-devops-api@sha256:0b8cf9f359eaea7597d34bd139bdcb05748a09985e9de85827cad915c0938fbe
+          image: rahulv963/flask-devops-api@sha256:9da2e78c4b0ddd6c0c98cec4033ece2f31688b4584f939d91cc8ea91e5d1b770
 
           envFrom:
             - configMapRef:
