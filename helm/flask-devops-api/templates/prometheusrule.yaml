@@ -1,0 +1,61 @@
+{{- if .Values.monitoring.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+
+metadata:
+  name: flask-devops-api-alerts
+  labels:
+    release: {{ .Values.monitoring.serviceMonitor.releaseLabel }}
+
+spec:
+  groups:
+    - name: flask-devops-api
+      rules:
+
+        # Alert when all Flask API targets are unavailable
+        - alert: FlaskAPIUnavailable
+          expr: sum(up{job="flask-devops-api"}) == 0
+          for: 2m
+
+          labels:
+            severity: critical
+
+          annotations:
+            summary: "Flask API is unavailable"
+            description: "All Flask API Prometheus targets have been unavailable for more than 2 minutes."
+
+        # Alert when 5xx error rate exceeds 5%
+        - alert: FlaskAPIHighErrorRate
+          expr: |
+            (
+              sum(rate(flask_api_requests_total{status=~"5.."}[5m]))
+              /
+              sum(rate(flask_api_requests_total[5m]))
+            ) > 0.05
+          for: 5m
+
+          labels:
+            severity: warning
+
+          annotations:
+            summary: "High Flask API error rate"
+            description: "More than 5% of Flask API requests have returned 5xx responses for more than 5 minutes."
+
+        # Alert when p95 latency exceeds 500 milliseconds
+        - alert: FlaskAPIHighLatency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (
+                rate(flask_api_request_duration_seconds_bucket[5m])
+              )
+            ) > 0.5
+          for: 5m
+
+          labels:
+            severity: warning
+
+          annotations:
+            summary: "High Flask API latency"
+            description: "The Flask API p95 request latency has exceeded 500 milliseconds for more than 5 minutes."
+{{- end }}

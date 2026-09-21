@@ -1,0 +1,119 @@
+replicaCount: 2
+
+image:
+  repository: rahulv963/flask-devops-api
+  digest: "sha256:58594c753de73fd64494c4815456702c86f20618e4362221c45a60e5a9b945e3"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: flask-devops-sa
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 999
+  runAsGroup: 999
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+containerPort: 8000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: flask.test
+  tls:
+    enabled: true
+    secretName: flask-devops-tls
+  path: /
+  pathType: Prefix
+
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress-nginx
+  ingressPodLabel:
+    key: app.kubernetes.io/component
+    value: controller
+  testNamespace: flask-prod
+  testPodLabel:
+    key: app.kubernetes.io/component
+    value: helm-test
+  port: 8000
+
+config:
+  APP_ENV: "production"
+  APP_LOG_LEVEL: "info"
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    releaseLabel: monitoring
+    interval: 15s
+
+  prometheusRule:
+    enabled: true
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
+volumes:
+  - name: tmp
+    emptyDir: {}
+
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

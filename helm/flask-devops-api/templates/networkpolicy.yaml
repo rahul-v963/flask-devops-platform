@@ -1,0 +1,48 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+
+metadata:
+  name: flask-api-ingress
+  labels:
+    {{- include "flask-devops-api.labels" . | nindent 4 }}
+
+spec:
+  podSelector:
+    matchLabels:
+      app: flask-devops-api
+
+  policyTypes:
+    - Ingress
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.ingressNamespace }}
+
+          podSelector:
+            matchLabels:
+              {{ .Values.networkPolicy.ingressPodLabel.key }}: {{ .Values.networkPolicy.ingressPodLabel.value }}
+
+      ports:
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.port }}
+
+# Allow Helm test Pod
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.testNamespace }}
+
+          podSelector:
+            matchLabels:
+              {{ .Values.networkPolicy.testPodLabel.key }}: {{ .Values.networkPolicy.testPodLabel.value }}
+
+      ports:
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.port }}
+
+
+
+{{- end }}

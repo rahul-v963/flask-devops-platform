@@ -1,0 +1,20 @@
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+
+metadata:
+  name: flask-devops-api
+  labels:
+    release: {{ .Values.monitoring.serviceMonitor.releaseLabel }}
+
+spec:
+  selector:
+    matchLabels:
+      monitoring: prometheus
+
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+{{- end }}
+
