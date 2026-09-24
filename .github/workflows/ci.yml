@@ -48,6 +48,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -68,7 +71,7 @@ jobs:
           ignore-unfixed: true
           exit-code: 1
 
-       # Install Syft for SBOM generation
+      # Install Syft for SBOM generation
       - name: Install Syft
         uses: anchore/sbom-action/download-syft@v0
 
@@ -138,3 +141,45 @@ jobs:
 
           rm -f cosign.key
 
+      # Get the immutable digest from Docker Hub
+      - name: Get image digest
+        if: github.event_name == 'push'
+        id: image
+        run: |
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/flask-devops-api:${{ github.sha }}"
+
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE" \
+            --format '{{.Manifest.Digest}}')
+
+          echo "Image digest: $DIGEST"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
+      # Update Helm chart with the new immutable image digest
+      - name: Update Helm image digest
+        if: github.event_name == 'push'
+        run: |
+          sed -i \
+            "s|^  digest:.*|  digest: \"${{ steps.image.outputs.digest }}\"|" \
+            helm/flask-devops-api/values.yaml
+
+          echo "Updated Helm image digest:"
+          grep -A2 '^image:' helm/flask-devops-api/values.yaml
+
+      # Commit and push the new image digest to Git
+      - name: Commit Helm image digest
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- helm/flask-devops-api/values.yaml; then
+            echo "No Helm image digest change detected."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add helm/flask-devops-api/values.yaml
+
+          git commit \
+            -m "chore: update image digest to ${{ steps.image.outputs.digest }}"
+
+          git push
