@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: rahulv963/flask-devops-api
-  digest: "sha256:70d2be171d5b5be7a4d5c10c075a0f4333bcff221bb9a6d853ddd8a6dfe400ea"
+  digest: "sha256:bf8823258de8da7509f1f1c2480e92f30ec828a13f7e05e01440289c9d70be43"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
