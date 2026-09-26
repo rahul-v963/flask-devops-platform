@@ -35,7 +35,7 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
 
-          image: "{{ .Values.image.repository }}@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           ports:
